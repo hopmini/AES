@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AES File Encryptor & Decryptor - Hỗ trợ ảnh</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<style>
+  /* Giữ nguyên CSS bạn đã có */
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #fff;
+    color: #24292f;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: #f6f8fa;
+    border-bottom: 1px solid #e1e4e8;
+    padding: 12px 20px;
+    font-weight: 600;
+    color: #24292f;
+    user-select: none;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  header img.logo {
+    height: 32px;
+    width: 32px;
+    object-fit: contain;
+  }
+  header span.title {
+    font-size: 20px;
+  }
+  footer {
+    background: #f6f8fa;
+    border-top: 1px solid #e1e4e8;
+    padding: 10px 20px;
+    font-size: 14px;
+    color: #586069;
+    text-align: center;
+    user-select: none;
+    margin-top: auto;
+  }
+  main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    width: 100%;
+  }
+  #chatWindow {
+    flex: 1;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 400px;
+    background: #fafbfc;
+    box-shadow: inset 0 1px 3px rgb(27 31 35 / 0.1);
+    margin-bottom: 8px;
+  }
+  .message {
+    max-width: 70%;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    line-height: 1.4;
+    font-size: 15px;
+    word-wrap: break-word;
+  }
+  .message.user {
+    background: #2ea44f;
+    color: white;
+    margin-left: auto;
+    border-bottom-right-radius: 4px;
+  }
+  .message.bot {
+    background: #e1e4e8;
+    color: #24292f;
+    margin-right: auto;
+    border-bottom-left-radius: 4px;
+  }
+  #adBelowChat {
+    background: #e1e4e8;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #444;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .tab-menu {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    user-select: none;
+  }
+  .tab-menu button {
+    flex: 1;
+    padding: 10px 0;
+    font-weight: 600;
+    font-size: 15px;
+    border: 1.5px solid #d0d7de;
+    border-radius: 8px;
+    background: #fafbfc;
+    color: #24292f;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+  .tab-menu button:hover:not(.active) {
+    background-color: #e1e4e8;
+    border-color: #959da5;
+  }
+  .tab-menu button.active {
+    background-color: #2ea44f;
+    border-color: #2ea44f;
+    color: white;
+    cursor: default;
+  }
+  .form-ad-container {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+  }
+  form {
+    flex: 1;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  input[type="file"] {
+    flex: 1 1 40%;
+  }
+  input[type="text"] {
+    flex: 1 1 40%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid #d0d7de;
+    font-size: 14px;
+  }
+  button#executeBtn {
+    flex: 1 1 15%;
+    background-color: #2ea44f;
+    border: none;
+    color: white;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+  }
+  button#executeBtn:hover:not(:disabled) {
+    background-color: #22863a;
+  }
+  button#executeBtn:disabled {
+    background-color: #94d3a2;
+    cursor: not-allowed;
+  }
+  #downloadSection {
+    margin-top: 12px;
+    text-align: right;
+  }
+  #downloadBtn {
+    background: transparent;
+    border: none;
+    color: #0969da;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    transition: background-color 0.3s ease;
+  }
+  #downloadBtn:hover {
+    background-color: rgba(9, 105, 218, 0.1);
+  }
+  #downloadBtn svg {
+    stroke: currentColor;
+  }
+  #adSidebar {
+    width: 180px;
+    padding: 10px 12px;
+    background: #f6f8fa;
+    border: 1px solid #d0d7de;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #444;
+    user-select: none;
+  }
+  @media (max-width: 720px) {
+    .form-ad-container {
+      flex-direction: column;
+    }
+    #adSidebar {
+      display: none;
+    }
+    form {
+      flex-wrap: nowrap;
+      flex-direction: column;
+      gap: 12px;
+    }
+    input[type="file"], input[type="text"], button#executeBtn {
+      flex: 1 1 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <img class="logo" src="logo.png" alt="Logo AES" />
+  <span class="title">AES File Encryptor & Decryptor</span>
+</header>
+
+<main>
+  <div id="chatWindow" aria-live="polite" aria-label="Chat messages"></div>
+  <div id="adBelowChat" role="complementary">
+    💡 Quảng cáo: Hãy thử khóa học lập trình web của chúng tôi để nâng cao kỹ năng!
+  </div>
+
+  <div class="tab-menu" role="tablist" aria-label="Chọn thao tác">
+    <button id="tabEncrypt" role="tab" aria-selected="true" aria-controls="formSection" tabindex="0" class="active">Mã hóa</button>
+    <button id="tabDecrypt" role="tab" aria-selected="false" aria-controls="formSection" tabindex="-1">Giải mã</button>
+  </div>
+
+  <div class="form-ad-container">
+    <form id="chatForm" aria-live="polite" aria-atomic="true">
+      <input type="file" id="fileInput" aria-label="Chọn file cần xử lý" />
+      <input type="text" id="keyInput" placeholder="Nhập khóa (bất kỳ độ dài)" aria-label="Khóa mã hóa/giải mã" autocomplete="off" />
+      <button id="executeBtn" type="button" disabled>Thực hiện Mã hóa</button>
+    </form>
+
+    <aside id="adSidebar" role="complementary" aria-label="Quảng cáo">
+      <strong>Quảng cáo</strong>
+      <p>🔒 Nâng cao bảo mật dữ liệu của bạn với AES!</p>
+      <p>💻 Tham gia ngay khóa học bảo mật miễn phí.</p>
+      <p><a href="https://example.com" target="_blank" rel="noopener" style="color:#0969da;">Xem chi tiết</a></p>
+    </aside>
+  </div>
+
+  <div id="downloadSection" style="display:none;">
+    <a id="downloadBtn" href="#" download="" aria-label="Tải file kết quả">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18" viewBox="0 0 24 24">
+        <path d="M12 5v14M19 12l-7 7-7-7"/>
+      </svg>
+      Tải file
+    </a>
+  </div>
+</main>
+
+<footer>
+  © 2025 by Bạn. Giao diện theo phong cách ChatGPT nền trắng với logo & quảng cáo
+</footer>
+
+<script>
+  const chatWindow = document.getElementById('chatWindow');
+  const fileInput = document.getElementById('fileInput');
+  const keyInput = document.getElementById('keyInput');
+  const executeBtn = document.getElementById('executeBtn');
+  const downloadSection = document.getElementById('downloadSection');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  const tabEncrypt = document.getElementById('tabEncrypt');
+  const tabDecrypt = document.getElementById('tabDecrypt');
+
+  let currentMode = 'encrypt'; // Mặc định
+
+  function updateExecuteButton() {
+    const hasFile = fileInput.files.length > 0;
+    const hasKey = keyInput.value.trim().length > 0;
+    executeBtn.disabled = !(hasFile && hasKey);
+  }
+
+  fileInput.addEventListener('change', () => {
+    updateExecuteButton();
+    downloadSection.style.display = 'none';
+  });
+  keyInput.addEventListener('input', () => {
+    updateExecuteButton();
+    downloadSection.style.display = 'none';
+  });
+
+  function addMessage(text, isUser = false, isImage = false, imageSrc = '') {
+    const div = document.createElement('div');
+    div.className = 'message ' + (isUser ? 'user' : 'bot');
+    if (isImage) {
+      const img = document.createElement('img');
+      img.src = imageSrc;
+      img.style.maxWidth = '200px';
+      img.style.borderRadius = '12px';
+      div.appendChild(img);
+    } else {
+      div.textContent = text;
+    }
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function switchTab(mode) {
+    if (mode === currentMode) return;
+    currentMode = mode;
+    if (mode === 'encrypt') {
+      tabEncrypt.classList.add('active');
+      tabEncrypt.setAttribute('aria-selected', 'true');
+      tabEncrypt.tabIndex = 0;
+
+      tabDecrypt.classList.remove('active');
+      tabDecrypt.setAttribute('aria-selected', 'false');
+      tabDecrypt.tabIndex = -1;
+
+      executeBtn.textContent = 'Thực hiện Mã hóa';
+    } else {
+      tabDecrypt.classList.add('active');
+      tabDecrypt.setAttribute('aria-selected', 'true');
+      tabDecrypt.tabIndex = 0;
+
+      tabEncrypt.classList.remove('active');
+      tabEncrypt.setAttribute('aria-selected', 'false');
+      tabEncrypt.tabIndex = -1;
+
+      executeBtn.textContent = 'Thực hiện Giải mã';
+    }
+    updateExecuteButton();
+    downloadSection.style.display = 'none';
+    chatWindow.innerHTML = ''; // Xoá chat cũ
+  }
+
+  tabEncrypt.addEventListener('click', () => switchTab('encrypt'));
+  tabDecrypt.addEventListener('click', () => switchTab('decrypt'));
+
+  // Chuyển ArrayBuffer thành CryptoJS WordArray
+  function arrayBufferToWordArray(ab) {
+    const u8 = new Uint8Array(ab);
+    const len = u8.length;
+    const words = [];
+    for (let i = 0; i < len; i += 4) {
+      words.push(
+        ((u8[i] << 24) | (u8[i + 1] << 16) | (u8[i + 2] << 8) | (u8[i + 3] || 0)) >>> 0
+      );
+    }
+    return CryptoJS.lib.WordArray.create(words, len);
+  }
+
+  // Chuyển CryptoJS WordArray thành Uint8Array
+  function wordArrayToUint8Array(wordArray) {
+    const len = wordArray.sigBytes;
+    const words = wordArray.words;
+    const u8 = new Uint8Array(len);
+    let idx = 0;
+    for (let i = 0; i < words.length; i++) {
+      let word = words[i];
+      for (let b = 3; b >= 0; b--) {
+        if (idx < len) {
+          u8[idx++] = (word >> (8 * b)) & 0xff;
+        }
+      }
+    }
+    return u8;
+  }
+
+  function handleEncrypt(file, key) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const arrayBuffer = e.target.result;
+      const wordArray = arrayBufferToWordArray(arrayBuffer);
+
+      const encrypted = CryptoJS.AES.encrypt(wordArray, key).toString();
+
+      addMessage(`Đã mã hóa file: ${file.name} (Kích thước gốc: ${file.size} bytes)`, true);
+      addMessage(`Kết quả mã hóa (Base64):\n${encrypted.slice(0, 64)}...`, false);
+
+      // Lưu kết quả mã hóa base64 vào biến để tải file
+      window.latestEncrypted = encrypted;
+      window.latestFileName = file.name + '.enc';
+
+      // Chuẩn bị link tải file (dạng text base64)
+      const blob = new Blob([encrypted], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      downloadBtn.href = url;
+      downloadBtn.download = window.latestFileName;
+      downloadSection.style.display = 'block';
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function handleDecrypt(file, key) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const encryptedText = e.target.result.trim();
+
+      let decrypted;
+      try {
+        const decryptedWA = CryptoJS.AES.decrypt(encryptedText, key);
+        if (!decryptedWA.sigBytes) throw new Error('Không giải mã được (sigBytes = 0)');
+
+        const u8 = wordArrayToUint8Array(decryptedWA);
+
+        // Tạo Blob từ Uint8Array
+        const blob = new Blob([u8]);
+        const blobUrl = URL.createObjectURL(blob);
+
+        addMessage(`Đã giải mã file: ${file.name}`, true);
+
+        // Nếu là ảnh, hiển thị ảnh; còn nếu là text thì hiển thị text
+        // Kiểm tra mime type bằng Blob
+        // Cách đơn giản: thử hiển thị ảnh. Nếu lỗi thì fallback hiển thị text.
+        const img = document.createElement('img');
+        img.src = blobUrl;
+        img.style.maxWidth = '200px';
+        img.onload = () => {
+          addMessage('', false, true, blobUrl);
+        };
+        img.onerror = () => {
+          // Nếu không phải ảnh, đọc Blob thành text rồi hiển thị
+          const textReader = new FileReader();
+          textReader.onload = evt => {
+            addMessage(evt.target.result);
+          };
+          textReader.readAsText(blob);
+        };
+
+        // Link tải file giải mã
+        window.latestDecryptedBlob = blob;
+        window.latestFileName = file.name.replace(/\.enc$/i, '') || 'decrypted.bin';
+
+        downloadBtn.href = blobUrl;
+        downloadBtn.download = window.latestFileName;
+        downloadSection.style.display = 'block';
+
+      } catch (err) {
+        addMessage('Lỗi giải mã: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  executeBtn.addEventListener('click', () => {
+    if (fileInput.files.length === 0) return;
+    const file = fileInput.files[0];
+    const key = keyInput.value;
+
+    if (currentMode === 'encrypt') {
+      handleEncrypt(file, key);
+    } else {
+      handleDecrypt(file, key);
+    }
+  });
+
+  // Khởi tạo button disabled khi load trang
+  updateExecuteButton();
+</script>
+
+</body>
+</html>
